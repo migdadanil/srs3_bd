@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Личный кабинет</title>
+</head>
+<body>
+    <h2>Здравствуйте, {{ request.user.username }}!</h2>
+    <p>Вы успешно вошли в закрытую часть системы.</p>
+
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Выйти</button>
+    </form>
+</body>
+</html>
