@@ -1,5 +1,5 @@
+venv/
 .venv/
+staticfiles/
+*.sqlite3
 __pycache__/
-*.pyc
-db.sqlite3
-.DS_Store

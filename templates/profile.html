@@ -1,16 +1,23 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Личный кабинет</title>
-</head>
-<body>
-    <h2>Здравствуйте, {{ request.user.username }}!</h2>
-    <p>Вы успешно вошли в закрытую часть системы.</p>
+{% extends 'base.html' %}
 
-    <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit">Выйти</button>
-    </form>
-</body>
-</html>
+{% block title %}
+Профиль
+{% endblock %}
+
+{% block content %}
+<div class="user-info">
+    <h1>Профиль пользователя</h1>
+    <p>
+        Имя пользователя: <strong>{{ user.username }}</strong>
+    </p>
+    <p>
+        Статус:
+        {% if user.is_superuser %}
+            <span class="badge text-bg-danger">Администратор</span>
+        {% else %}
+            <span class="badge text-bg-primary">Пользователь</span>
+        {% endif %}
+    </p>
+    <a class="btn btn-primary" href="/courses/">Посмотреть курсы</a>
+</div>
+{% endblock %}
