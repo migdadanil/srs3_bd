@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Факультеты{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Факультеты</h1>
+    {% if is_methodist %}
+        <a class="btn btn-primary" href="{% url 'department_create' %}">Добавить факультет</a>
+    {% endif %}
+</div>
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Название</th>
+            {% if is_methodist %}
+                <th>Действия</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for department in departments %}
+            <tr>
+                <td>{{ department.id }}</td>
+                <td>{{ department.name }}</td>
+                {% if is_methodist %}
+                    <td>
+                        <a class="btn btn-sm btn-warning" href="{% url 'department_update' department.id %}">Изменить</a>
+                        <a class="btn btn-sm btn-danger" href="{% url 'department_delete' department.id %}">Удалить</a>
+                    </td>
+                {% endif %}
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="3">Факультеты не найдены.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

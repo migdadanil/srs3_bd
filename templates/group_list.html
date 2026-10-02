@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Учебные группы{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Учебные группы</h1>
+    {% if is_methodist %}
+        <a class="btn btn-primary" href="{% url 'academic_group_create' %}">Добавить группу</a>
+    {% endif %}
+</div>
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Название группы</th>
+            <th>Факультет</th>
+            {% if is_methodist %}
+                <th>Действия</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for group in groups %}
+            <tr>
+                <td>{{ group.id }}</td>
+                <td>{{ group.name }}</td>
+                <td>{{ group.department.name }}</td>
+                {% if is_methodist %}
+                    <td>
+                        <a class="btn btn-sm btn-warning" href="{% url 'academic_group_update' group.id %}">Изменить</a>
+                        <a class="btn btn-sm btn-danger" href="{% url 'academic_group_delete' group.id %}">Удалить</a>
+                    </td>
+                {% endif %}
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="4">Учебные группы не найдены.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

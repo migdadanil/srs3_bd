@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import Course, Department, StudentProfile
+from .models import AcademicGroup, Course, Department, StudentProfile
+
+
+@admin.register(AcademicGroup)
+class AcademicGroupAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "department")
+    list_filter = ("department",)
+    search_fields = ("name",)
 
 
 @admin.register(Department)
