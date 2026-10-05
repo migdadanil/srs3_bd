@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Список студентов{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+  <div>
+    <h2 class="h3 fw-bold mb-1 text-white">Контингент студентов</h2>
+    <p class="text-muted small mb-0">Всего в базе данных: {{ students|length }} учащихся</p>
+  </div>
+  
+  <div class="btn-group">
+    <a href="{% url 'student_list' %}" class="btn btn-sm {% if not selected_group %}btn-primary{% else %}btn-outline-secondary text-white{% endif %}">Все группы</a>
+    {% for g in groups %}
+      <a href="?group={{ g.name }}" class="btn btn-sm {% if selected_group == g.name %}btn-primary{% else %}btn-outline-secondary text-white{% endif %}">{{ g.name }}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-vcenter table-hover card-table">
+      <thead>
+        <tr>
+          <th>Студент</th>
+          <th>Группа</th>
+          <th>Факультет</th>
+          <th>Курсы</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center">
+              <span class="avatar avatar-sm bg-blue-lt me-3 text-uppercase fw-bold">{{ s.user.last_name|slice:":1" }}</span>
+              <div>
+                <div class="fw-semibold text-white">{{ s.user.last_name }} {{ s.user.first_name }}</div>
+                <div class="text-muted small">{{ s.user.email }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="badge bg-dark text-info border border-secondary">{{ s.academic_group.name }}</span>
+          </td>
+          <td class="text-muted small">{{ s.department.name }}</td>
+          <td>
+            {% for c in s.courses.all %}
+              <span class="badge bg-light text-muted border small mb-1">{{ c.title }}</span>
+            {% empty %}
+              <span class="text-muted small">Нет курсов</span>
+            {% endfor %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

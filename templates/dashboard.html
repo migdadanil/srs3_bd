@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Академический мониторинг{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+  <div>
+    <h2 class="h3 fw-bold mb-1 text-white">Академический мониторинг</h2>
+    <p class="text-muted small mb-0">Аналитика учебных курсов, групп и контингента студентов</p>
+  </div>
+  
+  <form method="get" class="d-flex align-items-center gap-2 m-0">
+    <label class="text-muted small text-nowrap">Факультет:</label>
+    <select name="department" class="form-select form-select-sm bg-dark text-white border-secondary" onchange="this.form.submit()">
+      <option value="">Все факультеты</option>
+      {% for dept in all_departments %}
+        <option value="{{ dept.id }}" {% if selected_department == dept.id %}selected{% endif %}>{{ dept.name }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="row g-3 mb-4">
+  {% include 'components/kpi_card.html' with title="Студентов" value=total_students subtitle="В базе данных" %}
+  {% include 'components/kpi_card.html' with title="Дисциплин" value=total_courses subtitle="Каталог курсов" %}
+  {% include 'components/kpi_card.html' with title="Факультетов" value=total_departments subtitle="Подразделений" %}
+  {% include 'components/kpi_card.html' with title="Академ. групп" value=total_groups subtitle="Учебных потоков" %}
+</div>
+
+<div class="row g-3">
+  {% include 'components/chart_card.html' with title="Востребованность дисциплин" subtitle="Количество студентов, выбравших курс" tag="Bar Chart" chart_id="chart-courses" col_class="col-lg-6" %}
+
+  {% include 'components/chart_card.html' with title="Распределение по группам" subtitle="Доля студентов по академическим группам" tag="Donut Chart" chart_id="chart-groups" col_class="col-lg-6" %}
+
+  {% include 'components/chart_card.html' with title="Динамика регистраций" subtitle="Накопительный приток учетных записей" tag="Area Chart" chart_id="chart-users" col_class="col-lg-6" %}
+
+  {% include 'components/chart_card.html' with title="Заполняемость факультетов" subtitle="Процент распределения контингента" tag="Radial Bar" chart_id="chart-departments" col_class="col-lg-6" %}
+</div>
+
+{{ chart_course_labels|json_script:"data-course-labels" }}
+{{ chart_course_data|json_script:"data-course-data" }}
+{{ chart_group_labels|json_script:"data-group-labels" }}
+{{ chart_group_data|json_script:"data-group-data" }}
+{{ chart_user_labels|json_script:"data-user-labels" }}
+{{ chart_user_data|json_script:"data-user-data" }}
+{{ chart_dept_labels|json_script:"data-dept-labels" }}
+{{ chart_dept_percentages|json_script:"data-dept-percentages" }}
+
+<script src="{% static 'tabler/js/apexcharts.min.js' %}"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const courseLabels = JSON.parse(JSON.parse(document.getElementById('data-course-labels').textContent));
+    const courseData = JSON.parse(JSON.parse(document.getElementById('data-course-data').textContent));
+    const groupLabels = JSON.parse(JSON.parse(document.getElementById('data-group-labels').textContent));
+    const groupData = JSON.parse(JSON.parse(document.getElementById('data-group-data').textContent));
+    const userLabels = JSON.parse(JSON.parse(document.getElementById('data-user-labels').textContent));
+    const userData = JSON.parse(JSON.parse(document.getElementById('data-user-data').textContent));
+    const deptLabels = JSON.parse(JSON.parse(document.getElementById('data-dept-labels').textContent));
+    const deptPercentages = JSON.parse(JSON.parse(document.getElementById('data-dept-percentages').textContent));
+
+    const commonChartOptions = {
+      chart: {
+        background: 'transparent',
+        toolbar: { show: false },
+        fontFamily: 'inherit'
+      },
+      theme: { mode: 'dark' },
+      grid: {
+        borderColor: 'rgba(255, 255, 255, 0.06)',
+        strokeDashArray: 3
+      }
+    };
+
+    new ApexCharts(document.querySelector("#chart-courses"), {
+      ...commonChartOptions,
+      series: [{ name: 'Студентов', data: courseData }],
+      chart: { ...commonChartOptions.chart, type: 'bar', height: 280 },
+      colors: ['#38bdf8'],
+      plotOptions: { bar: { borderRadius: 4, horizontal: true } },
+      xaxis: { categories: courseLabels }
+    }).render();
+
+    new ApexCharts(document.querySelector("#chart-groups"), {
+      ...commonChartOptions,
+      series: groupData,
+      labels: groupLabels,
+      chart: { ...commonChartOptions.chart, type: 'donut', height: 280 },
+      colors: ['#0284c7', '#6366f1', '#14b8a6', '#64748b'],
+      stroke: { colors: ['#0f172a'], width: 2 }
+    }).render();
+
+    new ApexCharts(document.querySelector("#chart-users"), {
+      ...commonChartOptions,
+      series: [{ name: 'Всего студентов', data: userData }],
+      chart: { ...commonChartOptions.chart, type: 'area', height: 280 },
+      colors: ['#6366f1'],
+      stroke: { curve: 'smooth', width: 2 },
+      fill: {
+        type: 'gradient',
+        gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.05, stops: [0, 95, 100] }
+      },
+      xaxis: { categories: userLabels }
+    }).render();
+
+    new ApexCharts(document.querySelector("#chart-departments"), {
+      ...commonChartOptions,
+      series: deptPercentages,
+      chart: { ...commonChartOptions.chart, type: 'radialBar', height: 280 },
+      plotOptions: {
+        radialBar: {
+          dataLabels: {
+            name: { fontSize: '13px' },
+            value: { fontSize: '15px', color: '#f8fafc', formatter: val => val + "%" }
+          },
+          track: { background: 'rgba(255, 255, 255, 0.05)' }
+        }
+      },
+      labels: deptLabels,
+      colors: ['#38bdf8', '#818cf8', '#2dd4bf']
+    }).render();
+  });
+</script>
+{% endblock %}
