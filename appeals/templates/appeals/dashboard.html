@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-xl py-4">
+    <!-- Верхняя плашка -->
+    <div class="page-header d-print-none mb-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title text-white">Центр академических обращений</h2>
+                <div class="text-muted mt-1">Интерактивный сервис обращений студентов каф. 317 через REST API</div>
+            </div>
+            <div class="col-auto ms-auto d-flex gap-2">
+                <button class="btn btn-outline-secondary" id="btn-export-csv" title="Экспорт текущей выборки в CSV">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" /><path d="M12 11v6" /><path d="M9 14l3 3l3 -3" /></svg>
+                    Экспорт CSV
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-create-ticket">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                    Подать обращение
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI карточки -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <span class="bg-primary text-white avatar me-3">∑</span>
+                        <div>
+                            <div class="font-weight-medium" id="kpi-total">0</div>
+                            <div class="text-muted">Всего обращений</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <span class="bg-azure text-white avatar me-3">★</span>
+                        <div>
+                            <div class="font-weight-medium" id="kpi-new">0</div>
+                            <div class="text-muted">Новые</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <span class="bg-yellow text-white avatar me-3">⚙</span>
+                        <div>
+                            <div class="font-weight-medium" id="kpi-progress">0</div>
+                            <div class="text-muted">В работе</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <span class="bg-success text-white avatar me-3">✓</span>
+                        <div>
+                            <div class="font-weight-medium" id="kpi-done">0</div>
+                            <div class="text-muted">Выполнено</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Уведомления -->
+    <div id="alert-container"></div>
+
+    <!-- Карточка реестра с панелью фильтров и поиском -->
+    <div class="card">
+        <div class="card-header">
+            <div class="row w-100 g-2 align-items-center">
+                <div class="col-md-4">
+                    <div class="input-icon">
+                        <span class="input-icon-addon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="10" cy="10" r="7" /><line x1="21" y1="21" x2="15" y2="15" /></svg>
+                        </span>
+                        <input type="text" id="live-search" class="form-control" placeholder="Мгновенный поиск по теме и описанию...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select id="category-filter" class="form-select">
+                        <option value="">Все категории МАИ</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="status-filter" class="form-select">
+                        <option value="">Все статусы</option>
+                        <option value="new">Новые</option>
+                        <option value="progress">В работе</option>
+                        <option value="done">Выполненные</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div id="loading" class="p-4 text-center text-muted" hidden>
+                <div class="spinner-border text-primary" role="status"></div>
+                <div class="mt-2">Синхронизация с сервером через REST API...</div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Тема обращения</th>
+                            <th>Категория</th>
+                            <th>Приоритет</th>
+                            <th>Статус</th>
+                            <th>Дата подачи</th>
+                            <th class="w-1">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tickets-tbody">
+                        <!-- JS генерирует строки -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка создания -->
+<div class="modal modal-blur fade" id="modal-create-ticket" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form id="create-ticket-form">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Подача нового обращения</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modal-error" class="alert alert-danger" style="display: none;"></div>
+                    <div class="mb-3">
+                        <label class="form-label required">Тема обращения</label>
+                        <input type="text" id="ticket-title" class="form-control" placeholder="Например: Заявление на перезачет дисциплин" required>
+                        <small class="form-hint">Минимум 5 символов. Контролируется серверной валидацией DRF.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Категория подразделения</label>
+                        <select id="ticket-category" class="form-select" required></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Приоритет</label>
+                        <select id="ticket-priority" class="form-select">
+                            <option value="low">Низкий</option>
+                            <option value="medium" selected>Обычный</option>
+                            <option value="high">Срочный</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Подробности ситуации</label>
+                        <textarea id="ticket-desc" class="form-control" rows="3" placeholder="Укажите конкретные детали обращения..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary ms-auto" id="btn-submit-ticket">Создать через API</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка удаления -->
+<div class="modal modal-blur fade" id="modal-delete" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="modal-title">Удалить обращение?</div>
+                <div>Вы действительно хотите удалить обращение <strong id="delete-ticket-name"></strong>? Данное действие необратимо.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn">Удалить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS (необходим для работы модальных окон) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'appeals/app.js' %}"></script>
+{% endblock %}
