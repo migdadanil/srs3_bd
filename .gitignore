@@ -1,5 +1,20 @@
+cat << 'EOF' > .gitignore
+# Виртуальное окружение
 venv/
 .venv/
-staticfiles/
+
+# Базы данных
 *.sqlite3
+db.sqlite3
+
+# Конфигурация и секреты
+.env
+
+# Скомпилированные файлы и кэш
 __pycache__/
+*.pyc
+
+# Статические файлы продакшна
+staticfiles/
+.DS_Store
+EOF
